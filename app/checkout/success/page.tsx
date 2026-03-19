@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getOrderById } from "@/lib/strapi";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import Link from "next/link";

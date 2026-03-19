@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getCategoryBySlug, getProducts } from "@/lib/strapi"
 import { ProductCard } from "@/components/product/product-card"
 import { notFound } from "next/navigation"
