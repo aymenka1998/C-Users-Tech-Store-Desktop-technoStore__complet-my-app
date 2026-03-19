@@ -1,7 +1,7 @@
 "use client"
 // app/account/page.tsx
 
-
+export const dynamic = 'force-dynamic';
 import Link from "next/link"
 import { ShoppingBag, Heart, Mail, CalendarDays, User } from "lucide-react"
 import { useWishlist } from "@/context/wishlist-context"

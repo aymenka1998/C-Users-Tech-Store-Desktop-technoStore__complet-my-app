@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { HeroSection } from "@/components/home/hero-section"
 import { FeaturedProducts } from "@/components/home/featured-products"
 import { CategoriesShowcase } from "@/components/home/categories-showcase"
@@ -117,9 +118,17 @@ export default async function HomePage() {
       {featuredProducts.length > 0 && (
         <FeaturedProducts products={featuredProducts} />
       )}
-      <CategoriesShowcase categories={categories} />
+    
+       <CategoriesShowcase 
+  categories={categories.map(cat => ({
+    ...cat,
+    count: cat.count ?? 0 }))} 
+/>
+      
+      
       {newArrivals.length > 0 && (
         <NewArrivals products={newArrivals} />
+       
       )}
       <Newsletter />
     </div>
