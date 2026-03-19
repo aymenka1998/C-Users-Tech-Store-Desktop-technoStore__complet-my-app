@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
+
 import { getOrderById } from "@/lib/strapi";
-import { CheckCircle2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, ShoppingBag, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -27,21 +28,43 @@ interface OrderData {
 export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orderId: string }>;
+  searchParams: Promise<{ orderId?: string }>;
 }) {
-  const { orderId } = await searchParams;
-  const response = await getOrderById(orderId);
-  
-  // في Strapi 5، البيانات تكون مباشرة داخل data بدون attributes
-  const order = response?.data as OrderData | undefined;
+  // 1. استخراج orderId بأمان
+  const params = await searchParams;
+  const orderId = params.orderId;
+
+  if (!orderId) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center" dir="rtl">
+        <div className="max-w-md mx-auto border rounded-2xl p-8 bg-white shadow-sm">
+          <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">رقم الطلب مفقود</h2>
+          <p className="text-gray-600 mb-6">لم نتمكن من العثور على رقم الطلب في الرابط.</p>
+          <Link href="/products" className="bg-primary text-white px-6 py-2 rounded-lg inline-block">العودة للمتجر</Link>
+        </div>
+      </div>
+    );
+  }
+
+  let order: OrderData | null = null;
+
+  // 2. محاولة جلب البيانات مع معالجة الأخطاء (لمنع انهيار الصفحة)
+  try {
+    const response = await getOrderById(orderId);
+    // في Strapi 5 البيانات مباشرة داخل data
+    order = (response?.data as OrderData) || null;
+  } catch (error) {
+    console.error("Error fetching order in SuccessPage:", error);
+  }
 
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-20 text-center" dir="rtl">
         <div className="max-w-md mx-auto border rounded-2xl p-8 bg-white shadow-sm">
           <h2 className="text-2xl font-bold text-red-500 mb-4">عذراً!</h2>
-          <p className="text-gray-600 mb-6">لم نتمكن من العثور على تفاصيل الطلب رقم {orderId}. قد يستغرق النظام ثوانٍ لتحديث البيانات.</p>
-          <Link href="/products" className="text-primary hover:underline">العودة للمتجر</Link>
+          <p className="text-gray-600 mb-6">لم نتمكن من العثور على تفاصيل الطلب رقم {orderId}. قد يكون السيرفر قيد التحديث.</p>
+          <Link href="/products" className="text-primary hover:underline font-bold">العودة للمتجر</Link>
         </div>
       </div>
     );
@@ -52,9 +75,10 @@ export default async function SuccessPage({
   return (
     <div className="container mx-auto px-4 py-16 text-right" dir="rtl">
       <div className="max-w-3xl mx-auto border rounded-2xl p-8 bg-white dark:bg-card shadow-lg">
+        
         {/* Success Header */}
         <div className="text-center mb-10">
-          <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-green-100 dark:bg-green-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">تم استلام طلبك بنجاح!</h1>
@@ -79,7 +103,7 @@ export default async function SuccessPage({
               return (
                 <div key={item.id} className="flex justify-between items-center py-4">
                   <div className="flex items-center gap-4">
-                    <div className="relative w-20 h-20 bg-gray-50 rounded-xl overflow-hidden border">
+                    <div className="relative w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-xl overflow-hidden border">
                       <Image 
                         src={imageUrl ? (imageUrl.startsWith("http") ? imageUrl : `${STRAPI_URL}${imageUrl}`) : "/images/placeholder.jpg"}
                         alt={product?.name || "Product"}
@@ -90,10 +114,9 @@ export default async function SuccessPage({
                     <div>
                       <p className="font-bold text-gray-800 dark:text-gray-200">{product?.name}</p>
                       <p className="text-sm text-gray-500">الكمية: {item.quantity}</p>
-                      <p className="text-sm font-medium sm:hidden">{item.price} ر.س</p>
                     </div>
                   </div>
-                  <p className="font-bold text-lg hidden sm:block">{item.price * item.quantity} ر.س</p>
+                  <p className="font-bold text-lg">{item.price * item.quantity} ر.س</p>
                 </div>
               );
             })}
