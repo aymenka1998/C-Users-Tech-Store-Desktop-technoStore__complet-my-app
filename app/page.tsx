@@ -10,14 +10,9 @@ import { DisplayProduct, DisplayCategory } from "@/types/display"
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
-interface StrapiImageAttributes {
-  url?: string
-}
 
-interface StrapiImageData {
-  attributes?: StrapiImageAttributes
-  url?: string
-}
+
+
 interface StrapiImageField {
   url?: string
   formats?: { medium?: { url?: string }; small?: { url?: string } }

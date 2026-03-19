@@ -1,11 +1,8 @@
 // app/offers/page.tsx
-
+export const dynamic = 'force-dynamic';
 import React from "react";
 import { getProducts } from "@/lib/strapi";
 import { ProductCard } from "@/components/product/product-card";
-
-export const dynamic = 'force-dynamic';
-
 export const metadata = {
   title: "العروض الحصرية | TechStore",
   description: "اكتشف أفضل العروض والخصومات على المنتجات التقنية",
