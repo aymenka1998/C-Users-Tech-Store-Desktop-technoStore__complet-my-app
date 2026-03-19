@@ -1,11 +1,12 @@
 "use client"
 // app/account/page.tsx
 
-export const dynamic = 'force-dynamic';
 import Link from "next/link"
-import { ShoppingBag, Heart, Mail, CalendarDays, User } from "lucide-react"
+import { ShoppingCart, Heart, Mail, CalendarDays, User } from "lucide-react"
 import { useWishlist } from "@/context/wishlist-context"
 import { type User as UserType } from "@/lib/auth"
+
+// 1. حذف export const dynamic من هنا تماماً
 
 function StatCard({
   icon: Icon, label, value, unit, href, colorClass, borderClass,
@@ -47,7 +48,6 @@ function InfoRow({ icon: Icon, label, value }: {
   )
 }
 
-// ─── يستقبل user مباشرة من AccountDashboard (لا localStorage) ────
 export default function AccountOverviewPage({ user }: { user: UserType }) {
   const { count: wishlistCount } = useWishlist()
 
@@ -56,11 +56,11 @@ export default function AccountOverviewPage({ user }: { user: UserType }) {
     : undefined
 
   return (
-    <div dir="rtl" className="space-y-4">
-
+    <div dir="rtl" className="space-y-4 text-right"> {/* أضفت text-right لضمان اتساق RTL */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard
-          icon={ShoppingBag} label="إجمالي المشتريات" value={0} unit="طلب"
+          icon={ShoppingCart} // غيرتها من ShoppingBag لتطابق أيقونة السلة المعتادة في مشروعك
+          label="إجمالي المشتريات" value={0} unit="طلب"
           href="/account" colorClass="bg-blue-50 text-blue-500" borderClass="border-blue-100"
         />
         <StatCard
@@ -75,12 +75,11 @@ export default function AccountOverviewPage({ user }: { user: UserType }) {
           <h3 className="font-black text-gray-800 text-sm">معلومات التواصل</h3>
         </div>
         <div className="p-4 space-y-2">
-          <InfoRow icon={Mail}         label="البريد الإلكتروني" value={user?.email} />
-          <InfoRow icon={CalendarDays} label="تاريخ الانضمام"   value={joinDate} />
-          <InfoRow icon={User}         label="اسم المستخدم"     value={user?.username} />
+          <InfoRow icon={Mail} label="البريد الإلكتروني" value={user?.email} />
+          <InfoRow icon={CalendarDays} label="تاريخ الانضمام" value={joinDate} />
+          <InfoRow icon={User} label="اسم المستخدم" value={user?.username} />
         </div>
       </div>
-
     </div>
   )
 }

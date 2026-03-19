@@ -1,6 +1,6 @@
 // app/products/[slug]/page.tsx
 // ✅ Server Component - بدون "use client"
-
+export const dynamic = 'force-dynamic';
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { ProductGallery } from "@/components/product/product-gallery"

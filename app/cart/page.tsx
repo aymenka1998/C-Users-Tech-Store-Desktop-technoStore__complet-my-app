@@ -1,24 +1,26 @@
-// app/cart/page.tsx
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react" // الحل الحديث والآمن
 import Link from "next/link"
 import { ArrowRight, ShoppingCart, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { CartLineItems } from "@/components/cart/cart-line-items"
 import { CartSummary } from "@/components/cart/cart-summary"
 import { useCart } from "@/hooks/use-cart"
 
+// وظائف مساعدة لـ useSyncExternalStore
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function CartPage() {
   const { items, totalPrice, clearCart, isLoaded } = useCart()
-  const [isClient, setIsClient] = useState(false)
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+  // هذا الـ Hook يحدد ما إذا كنا في المتصفح أم لا بدون التسبب في Cascading Renders
+  const isClient = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  // حالة التحميل (Skeleton) - ستظهر في السيرفر وأثناء التحميل الأول
   if (!isClient || !isLoaded) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -32,7 +34,6 @@ export default function CartPage() {
   }
 
   const shipping = totalPrice > 200 ? 0 : 25
-  const total = totalPrice + shipping
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -88,13 +89,11 @@ export default function CartPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <CartSummary totalPrice={totalPrice} shipping={shipping} />
-                
                 <Link href="/checkout">
                   <Button className="w-full" size="lg">
                     إتمام الشراء
                   </Button>
                 </Link>
-
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <span>🔒</span>
                   <span>دفع آمن 100%</span>

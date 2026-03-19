@@ -10,46 +10,41 @@ import { DisplayProduct, DisplayCategory } from "@/types/display"
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
 
-
-
-
-interface StrapiImageField {
-  url?: string
-  formats?: { medium?: { url?: string }; small?: { url?: string } }
-  data?: { attributes?: { url?: string } } | Array<{ attributes?: { url?: string } }>
-  attributes?: { url?: string }
-  [key: number]: { url?: string; formats?: { medium?: { url?: string }; small?: { url?: string } } }
+// ✅ استبدال 'any' بأنواع محددة لإصلاح أخطاء ESLint
+interface StrapiMedia {
+  url: string;
+  attributes?: { url: string };
+  formats?: { medium?: { url?: string } };
 }
 
-interface StrapiCategoryField {
-  data?: { attributes?: { name?: string }; name?: string }
-  name?: string
+interface StrapiEntity {
+  id: number;
+  attributes?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
-function getStrapiImageUrl(imageField: StrapiImageField | null | undefined): string {
+function getStrapiImageUrl(imageField: unknown): string {
   if (!imageField) return "";
 
-  // Strapi v5: image مصفوفة
+  // معالجة الحقل كـ unknown ثم تحويله بحذر
   const target = Array.isArray(imageField) ? imageField[0] : imageField;
-  if (!target) return "";
+  if (!target || typeof target !== 'object') return "";
 
-  const url =
-    (target as { url?: string }).url ||
-    (target as { formats?: { medium?: { url?: string } } }).formats?.medium?.url ||
-    (target as { formats?: { small?: { url?: string } } }).formats?.small?.url ||
-    ""
+  const img = target as StrapiMedia;
+  const url = img.url || img.attributes?.url || img.formats?.medium?.url || "";
 
   if (!url) return "";
-  return url.startsWith("http") ? url : `${STRAPI_URL}${url}`
+  return url.startsWith("http") ? url : `${STRAPI_URL}${url}`;
 }
 
-const mapProduct = (p: { id: number; attributes?: Record<string, unknown> } & Record<string, unknown>): DisplayProduct => {
+const mapProduct = (p: StrapiEntity): DisplayProduct => {
   const attrs = (p.attributes || p) as Record<string, unknown>;
-   console.log("IMAGE:", JSON.stringify(attrs.image, null, 2))
+  
   let catName = "عام";
-  if (attrs.category) {
-    const cat = attrs.category as StrapiCategoryField;
-    catName = cat.data?.attributes?.name || cat.data?.name || cat.name || "عام";
+  const categoryData = attrs.category as { data?: { attributes?: { name?: string } }; name?: string } | undefined;
+  
+  if (categoryData) {
+    catName = categoryData.data?.attributes?.name || categoryData.name || "عام";
   }
 
   return {
@@ -58,7 +53,7 @@ const mapProduct = (p: { id: number; attributes?: Record<string, unknown> } & Re
     slug: String(attrs.slug || ""),
     price: Number(attrs.price) || 0,
     originalPrice: attrs.originalPrice ? Number(attrs.originalPrice) : undefined,
-    image: getStrapiImageUrl(attrs.image as StrapiImageField),
+    image: getStrapiImageUrl(attrs.image || attrs.images),
     category: catName,
     isSale: Boolean(attrs.isSale),
     isNew: Boolean(attrs.isNew),
@@ -79,20 +74,17 @@ export default async function HomePage() {
       getCategories({ populate: "*" }),
     ]);
 
-    featuredProducts = (featuredRes?.data || []).map(mapProduct);
-    newArrivals = (newRes?.data || []).map(mapProduct);
+    featuredProducts = (featuredRes?.data || []).map((p: unknown) => mapProduct(p as StrapiEntity));
+    newArrivals = (newRes?.data || []).map((p: unknown) => mapProduct(p as StrapiEntity));
 
     categories = (catRes?.data || []).map((cat: StrapiCategory) => {
+      // تحويل cat إلى Record للوصول للخصائص بحرية دون استخدام any
       const attrs = (cat.attributes || cat) as Record<string, unknown>;
 
-      // ✅ Strapi v5: images مباشرة بدون data
-      const imagesField = attrs.images as { url?: string } | undefined;
-      const imageUrl = imagesField?.url
-        ? (imagesField.url.startsWith("http") ? imagesField.url : `${STRAPI_URL}${imagesField.url}`)
-        : getStrapiImageUrl(attrs.image as StrapiImageField);
+      const imagesField = attrs.images || attrs.image;
+      const imageUrl = getStrapiImageUrl(imagesField);
 
-      // ✅ Strapi v5: المنتجات في product (مصفوفة مباشرة)
-      const productArray = attrs.product as unknown[] | undefined;
+      const productArray = attrs.products || attrs.product;
       const productCount = Array.isArray(productArray) ? productArray.length : 0;
 
       return {
@@ -104,27 +96,15 @@ export default async function HomePage() {
       };
     });
   } catch (error) {
-    console.error("Error fetching home data:", error);
+    console.error("❌ Error fetching home data:", error);
   }
 
   return (
     <div className="min-h-screen">
       <HeroSection />
-      {featuredProducts.length > 0 && (
-        <FeaturedProducts products={featuredProducts} />
-      )}
-    
-       <CategoriesShowcase 
-  categories={categories.map(cat => ({
-    ...cat,
-    count: cat.count ?? 0 }))} 
-/>
-      
-      
-      {newArrivals.length > 0 && (
-        <NewArrivals products={newArrivals} />
-       
-      )}
+      {featuredProducts.length > 0 && <FeaturedProducts products={featuredProducts} />}
+      <CategoriesShowcase categories={categories.map(cat => ({ ...cat, count: cat.count ?? 0 }))} />
+      {newArrivals.length > 0 && <NewArrivals products={newArrivals} />}
       <Newsletter />
     </div>
   );

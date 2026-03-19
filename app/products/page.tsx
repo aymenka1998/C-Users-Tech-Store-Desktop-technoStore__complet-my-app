@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getProducts, getCategories } from "@/lib/strapi"
 import { ProductCard } from "@/components/product/product-card"
 import { CategoryFilter } from "@/components/filters/category-filter"

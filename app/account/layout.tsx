@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { AccountDashboard } from "@/components/account/account-dashboard"
 import { getUserFromToken } from "@/lib/auth"
 import { redirect } from "next/navigation"

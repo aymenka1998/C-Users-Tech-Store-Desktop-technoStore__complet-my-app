@@ -1,4 +1,5 @@
 //**  app/forgot-password/page.tsx
+export const dynamic = 'force-dynamic';
 import { Metadata } from "next"
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form"
 

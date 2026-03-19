@@ -1,4 +1,5 @@
 // app/not-found.tsx
+export const dynamic = 'force-dynamic';
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchX } from "lucide-react"

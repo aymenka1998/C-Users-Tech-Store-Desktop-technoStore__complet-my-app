@@ -1,4 +1,5 @@
 // app/loading.tsx
+export const dynamic = 'force-dynamic';
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {

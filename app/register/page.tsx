@@ -1,4 +1,5 @@
 // app/register/page.tsx
+export const dynamic = 'force-dynamic';
 import { Metadata } from "next"
 import { RegisterForm } from "@/components/auth/register-form"
 

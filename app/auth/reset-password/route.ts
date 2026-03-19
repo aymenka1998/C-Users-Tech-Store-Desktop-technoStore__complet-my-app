@@ -1,51 +1,48 @@
-// app/api/auth/reset-password/route.ts
 import { NextRequest, NextResponse } from "next/server"
 
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337"
 
-// نفس Map من forgot-password (في الإنتاج استخدم قاعدة بيانات)
-const resetTokens = new Map<string, { email: string; expires: Date }>()
-
 export async function POST(request: NextRequest) {
   try {
-    const { token, password } = await request.json()
+    const { email } = await request.json()
 
-    // التحقق من التوكن
-    if (!resetTokens.has(token)) {
+    if (!email) {
       return NextResponse.json(
-        { error: "الرابط غير صالح" },
+        { error: "البريد الإلكتروني مطلوب" },
         { status: 400 }
       )
     }
 
-    const tokenData = resetTokens.get(token)!
-    
-    if (new Date() > tokenData.expires) {
-      resetTokens.delete(token)
+    // ✅ استدعاء API الخاص بـ Strapi لإرسال بريد إعادة التعيين
+    // سيقوم Strapi بتوليد 'code' فريد وإرساله للمستخدم تلقائياً
+    const strapiRes = await fetch(`${STRAPI_URL}/api/auth/forgot-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    })
+
+    const data = await strapiRes.json()
+
+    if (!strapiRes.ok) {
+      console.error("Strapi forgot-password error:", data)
+      // ملاحظة: لأسباب أمنية، يفضل أحياناً عدم إخبار المستخدم إذا كان الإيميل غير موجود
       return NextResponse.json(
-        { error: "انتهت صلاحية الرابط" },
-        { status: 400 }
+        { error: data.error?.message || "حدث خطأ أثناء إرسال البريد" },
+        { status: strapiRes.status }
       )
     }
-
-    // ✅ تحديث كلمة المرور في Strapi
-    // ملاحظة: Strapi لا يدعم تحديث كلمة المرور مباشرة عبر API
-    // يجب استخدام Strapi Admin API أو إنشاء endpoint مخصص في Strapi
-    
-    // الحل المؤقت: إرسال بريد للمستخدم ليتواصل مع الدعم
-    // أو استخدام Strapi's built-in forgot-password endpoint
-
-    resetTokens.delete(token)
 
     return NextResponse.json({
       success: true,
-      message: "تم إعادة تعيين كلمة المرور بنجاح",
+      message: "إذا كان الحساب موجوداً، فستصلك رسالة تحتوي على تعليمات إعادة التعيين",
     })
 
   } catch (error) {
-    console.error("Reset password error:", error)
+    console.error("Forgot password route error:", error)
     return NextResponse.json(
-      { error: "حدث خطأ أثناء إعادة التعيين" },
+      { error: "حدث خطأ فني أثناء الاتصال بالسيرفر" },
       { status: 500 }
     )
   }
