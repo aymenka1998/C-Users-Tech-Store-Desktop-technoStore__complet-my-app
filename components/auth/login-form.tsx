@@ -1,15 +1,20 @@
-
 "use client"
 
-import { useState, useEffect, useActionState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useActionState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useFormStatus } from "react-dom"
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react"
 import { loginAction } from "@/app/auth/login/actions"
 
-export default function LoginForm() {
+function LoginFormContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  // قراءة الحالات من الرابط
+  const isConfirmed = searchParams.get('confirmed') === 'true'
+  const needsCheckEmail = searchParams.get('check_email') === 'true'
+
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [email, setEmail] = useState('')
@@ -26,11 +31,10 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-violet-50 via-white to-blue-50 flex items-center justify-center p-4" dir="rtl">
-
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-
+        
         {/* رأس البطاقة */}
-        <div className="bg-linear-to-br to-blue-500 p-8 text-center relative overflow-hidden">
+        <div className="bg-linear-to-br from-violet-600 to-blue-500 p-8 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full -translate-x-16 -translate-y-16" />
           <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-10 translate-y-10" />
           <div className="relative z-10">
@@ -45,6 +49,22 @@ export default function LoginForm() {
         {/* النموذج */}
         <div className="p-8">
 
+          {/* تنبيه نجاح التأكيد */}
+          {isConfirmed && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+              <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+              <p className="text-green-600 text-sm font-bold">تم تفعيل حسابك بنجاح! يمكنك الدخول الآن.</p>
+            </div>
+          )}
+
+          {/* تنبيه فحص البريد */}
+          {needsCheckEmail && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+              <Mail className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-blue-600 text-sm font-bold">تم إنشاء الحساب! يرجى تأكيد بريدك الإلكتروني أولاً.</p>
+            </div>
+          )}
+
           {/* تنبيه الخطأ */}
           {state?.error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
@@ -54,8 +74,7 @@ export default function LoginForm() {
           )}
 
           <form action={formAction} className="space-y-4">
-
-            {/* البريد الإلكتروني أو اسم المستخدم */}
+            {/* البريد الإلكتروني */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-gray-700 block">
                 البريد الإلكتروني أو اسم المستخدم
@@ -113,7 +132,6 @@ export default function LoginForm() {
                 name="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                value={String(rememberMe)}
                 className="w-4 h-4 rounded border-gray-300 text-violet-500 focus:ring-violet-400"
               />
               <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
@@ -121,7 +139,6 @@ export default function LoginForm() {
               </span>
             </label>
 
-            {/* زر الدخول */}
             <SubmitButton />
           </form>
 
@@ -135,25 +152,19 @@ export default function LoginForm() {
             </div>
           </div>
 
-          {/* أزرار التسجيل الاجتماعي */}
+          {/* التسجيل الاجتماعي */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              className="flex items-center justify-center gap-2 py-3 border-2 border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:border-violet-200 hover:text-violet-600 transition-all"
-            >
+            <button type="button" className="flex items-center justify-center gap-2 py-3 border-2 border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:border-violet-200 hover:text-violet-600 transition-all">
               Google
             </button>
-            <button
-              type="button"
-              className="flex items-center justify-center gap-2 py-3 border-2 border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:border-violet-200 hover:text-violet-600 transition-all"
-            >
+            <button type="button" className="flex items-center justify-center gap-2 py-3 border-2 border-gray-100 rounded-xl text-sm font-bold text-gray-600 hover:border-violet-200 hover:text-violet-600 transition-all">
               Facebook
             </button>
           </div>
 
           <p className="text-center mt-6 text-gray-400 text-sm">
             ليس لديك حساب؟{' '}
-            <Link href="/register" className="text-violet-500 hover:text-violet-600 font-bold transition-colors">
+            <Link href="/auth/register" className="text-violet-500 hover:text-violet-600 font-bold transition-colors">
               إنشاء حساب جديد
             </Link>
           </p>
@@ -169,7 +180,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full bg-linear-to-l from-violet-50 to-blue-500 hover:from-violet-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 group mt-2"
+      className="w-full bg-linear-to-l from-violet-600 to-blue-500 hover:from-violet-700 hover:to-blue-600 text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 group mt-2"
     >
       {pending ? (
         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -182,3 +193,4 @@ function SubmitButton() {
     </button>
   )
 }
+
