@@ -85,11 +85,10 @@ const orderPayload = {
 
     // استبدل هذا الجزء في ملف actions.ts (عند سطر 80)
 if (!order || !order.data) {
-  // طباعة الخطأ القادم من Strapi في الـ Terminal لرؤية التفاصيل
-  console.error("Strapi full error response:", JSON.stringify(order, null, 2));
-  
-  // استخراج رسالة الخطأ من Strapi إن وجدت
   const strapiMessage = order?.error?.message || "فشل إنشاء الطلب في قاعدة البيانات.";
+  if (process.env.NODE_ENV === 'development') {
+    console.error("Order creation failed:", strapiMessage);
+  }
   throw new Error(strapiMessage);
 }
 

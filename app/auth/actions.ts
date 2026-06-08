@@ -27,6 +27,11 @@ export async function registerAction(
   const fullName = formData.get("fullName") as string
   const phone = formData.get("phone") as string
 
+  // تحقق بسيط من البيانات قبل الإرسال
+  if (!username || !email || !password) {
+    return { error: "يرجى ملء جميع الحقول الأساسية" }
+  }
+
   try {
     const res = await fetch(`${STRAPI_URL}/api/auth/local/register`, {
       method: "POST",
@@ -74,13 +79,18 @@ export async function updateAccountAction(
   const phone = formData.get("phone") as string
 
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get("jwt")?.value
+    const cookieStore = await cookies();
+    const token = cookieStore.get("jwt")?.value;
 
     if (!token) return { error: "انتهت الجلسة، يرجى تسجيل الدخول" }
 
+    // التحقق من الحقول المطلوبة للتحديث
+    if (!fullName) return { error: "الاسم الكامل مطلوب" };
+
     // جلب معرف المستخدم الحالي
     const meRes = await fetch(`${STRAPI_URL}/api/users/me`, {
+      method: "GET",
+      cache: "no-store",
       headers: { Authorization: `Bearer ${token}` },
     })
     const user = await meRes.json()
@@ -95,12 +105,17 @@ export async function updateAccountAction(
       body: JSON.stringify({ fullName, phone }),
     })
 
-    if (!res.ok) return { error: "فشل تحديث البيانات في السيرفر" }
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Strapi Update Error:", errorData);
+      return { error: "فشل تحديث البيانات في السيرفر" };
+    }
 
     revalidatePath("/account")
     return { success: true, message: "تم تحديث بياناتك بنجاح ✅" }
   } catch (err) {
-    return { error: "حدث خطأ غير متوقع أثناء التحديث" }
+    console.error("Update Action Catch:", err);
+    return { error: "حدث خطأ في الاتصال بخادم البيانات" }
   }
 }
 

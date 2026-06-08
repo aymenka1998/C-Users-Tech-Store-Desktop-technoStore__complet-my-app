@@ -33,7 +33,9 @@ export async function submitReviewAction(
       }
     }
 
-    console.log("Sending payload:", JSON.stringify(payload, null, 2))
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Sending review payload...");
+    }
 
     const res = await fetch(`${STRAPI_URL}/api/reviews`, {
       method: "POST",
@@ -45,7 +47,9 @@ export async function submitReviewAction(
     })
 
     const data = await res.json()
-    console.log("Strapi response:", res.status, JSON.stringify(data, null, 2))
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Review submitted:", res.status);
+    }
 
     if (res.ok) {
       revalidatePath(`/products/${productSlug}`) // ← slug حقيقي

@@ -2,8 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    // ✅ هذا السطر هو الأهم لحل مشكلة ظهور الصور من localhost
-    unoptimized: true, 
     remotePatterns: [
       {
         protocol: 'http',
@@ -17,13 +15,35 @@ const nextConfig: NextConfig = {
         port: '1337',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**',
+        pathname: '/uploads/**',
+      },
     ],
   },
-  // تحسين أداء الترجمة (اختياري)
-  typescript: {
-    ignoreBuildErrors: true,
+  reactStrictMode: true,
+  headers: async () => {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
   },
-
 };
 
 export default nextConfig;

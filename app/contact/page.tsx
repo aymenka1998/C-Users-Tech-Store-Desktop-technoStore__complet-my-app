@@ -20,7 +20,9 @@ export default function ContactPage() {
 
     try {
       // منطق الإرسال الخاص بك هنا (مثلاً إلى API Route)
-      console.log("Form Data:", data)
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Contact form submitted");
+      }
       setStatus({ type: 'success', msg: 'تم إرسال رسالتك بنجاح!' })
     } catch (error) {
       setStatus({ type: 'error', msg: 'حدث خطأ، يرجى المحاولة لاحقاً.' })
