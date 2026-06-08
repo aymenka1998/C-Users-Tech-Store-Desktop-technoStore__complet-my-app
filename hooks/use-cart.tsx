@@ -2,14 +2,13 @@
 
 import { createContext, useContext, useCallback, useSyncExternalStore, type ReactNode } from "react"
 
-// ✅ توحيد المسمى إلى quantity ليتوافق مع دوال الحسابات والـ logic
 interface CartItem {
   id: string
   name: string
   slug: string
   price: number
   image: string
-  quantity: number 
+  quantity: number
 }
 
 interface CartContextType {
@@ -67,9 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // ✅ إصلاح addItem لاستخدام النوع الصحيح الموحد
-  // ✅ التعديل داخل دالة addItem في ملف use-cart.tsx
-const addItem = useCallback((newItem: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+  const addItem = useCallback((newItem: Omit<CartItem, "quantity"> & { quantity?: number }) => {
   const existingItem = items.find((item) => item.id === newItem.id);
   let updated: CartItem[];
   
@@ -80,7 +77,6 @@ const addItem = useCallback((newItem: Omit<CartItem, "quantity"> & { quantity?: 
         : item
     );
   } else {
-    // ✅ بدلاً من استخدام any، نقوم ببناء الكائن بالخصائص المطلوبة يدوياً
     const itemToAdd: CartItem = {
       id: newItem.id,
       name: newItem.name,
@@ -105,7 +101,6 @@ const addItem = useCallback((newItem: Omit<CartItem, "quantity"> & { quantity?: 
 
   const clearCart = useCallback(() => setStorageItem([]), [setStorageItem])
 
-  // ✅ الحسابات الآن ستعمل بشكل صحيح لأن الحقل موحد باسم quantity
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
